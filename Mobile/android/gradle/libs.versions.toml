@@ -23,7 +23,7 @@ androidxTestCore = "1.7.0"
 
 koin = "4.2.1"
 koinPlugin = "1.0.0-RC2"
-googleid = "1.2.0"
+googleid = "1.2.1"
 credentials = "1.6.0"
 slf4jAndroid = "1.7.36"
 media3 = "1.10.0"
