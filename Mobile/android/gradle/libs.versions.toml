@@ -18,7 +18,7 @@ kotlinxSerialization = "1.11.0"
 material3Version = "1.5.0-alpha19"
 mockk = "1.14.9"
 coroutinesTest = "1.11.0"
-robolectric = "4.16.1"
+robolectric = "4.17"
 androidxTestCore = "1.7.0"
 
 koin = "4.2.1"
