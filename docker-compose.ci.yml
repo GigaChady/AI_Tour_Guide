@@ -1,0 +1,111 @@
+name: ai-tour-guide-ci
+
+services:
+  api:
+    build: ./Backend
+    ports:
+      - "8000:8000"
+    environment:
+      JWT_SECRET_KEY: test-secret
+      JWT_ALGORITHM: HS256
+      JWT_ACCESS_TOKEN_EXPIRE_MINUTES: 9999
+      JWT_REFRESH_TOKEN_EXPIRE_DAYS: 99999
+      GOOGLE_CLIENT_ID: test-google-client
+      KEYCLOAK_SERVER_URL: http://localhost:8080
+      KEYCLOAK_INTERNAL_URL: http://keycloak:8080
+      KEYCLOAK_REALM: tourguide
+      KEYCLOAK_CLIENT_ID: web-client
+      KEYCLOAK_CLIENT_SECRET: web-secret
+      KEYCLOAK_REDIRECT_URI: http://localhost:8000/auth/keycloak/callback
+      FRONTEND_URL: http://localhost:3000
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/test_db
+      TEST_DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/test_db
+      REDIS_URL: redis://redis:6379/0
+      TTS_PROVIDER: edge
+      AI_MOCK: "True"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  ai:
+    build: ./AI
+    environment:
+      AI_MOCK: "True"
+      AI_RUN_STREAM_WORKER: "1"
+      OLLAMA_BASE_URL: http://ollama:11434
+      REDIS_URL: redis://redis:6379/0
+      PYTHONUNBUFFERED: "1"
+      MINIO_ENDPOINT: minio:9000
+      MINIO_PUBLIC_ENDPOINT: localhost:9000
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: admin12345
+      MINIO_BUCKET: poi-images
+      MINIO_SECURE: "false"
+      NVIDIA_API_KEY: ""
+    depends_on:
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+  db:
+    image: postgis/postgis:16-3.4-alpine
+    environment:
+      POSTGRES_DB: test_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d test_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin12345
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  locust:
+    image: locustio/locust:latest
+    volumes:
+      - ./Backend/tests/performance:/mnt/locust:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    command:
+      - -f
+      - /mnt/locust/locustfile.py
+      - --host
+      - http://api:8000
+      - --headless
+      - --users
+      - "10"
+      - --spawn-rate
+      - "2"
+      - --run-time
+      - 30s
+      - --exit-code-on-error
+      - "1"

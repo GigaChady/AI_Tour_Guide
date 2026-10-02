@@ -23,6 +23,8 @@ fun OnboardingWelcomeStepScreen(
         },
         headerTitle = stringResource(R.string.onboarding_header_text_header),
         headerBody = stringResource(R.string.onboarding_step1_header_text_body),
-        buttonLabel = stringResource(R.string.onboarding_step1_get_started_btn_content)
+        buttonLabel = stringResource(R.string.onboarding_step1_get_started_btn_content),
+        screenTestTag = "onboarding_welcome_screen",
+        buttonTestTag = "onboarding_welcome_next"
     )
 }

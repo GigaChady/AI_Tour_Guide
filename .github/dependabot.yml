@@ -1,0 +1,14 @@
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /Backend
+    schedule:
+      interval: weekly
+  - package-ecosystem: pip
+    directory: /AI
+    schedule:
+      interval: weekly
+  - package-ecosystem: gradle
+    directory: /Mobile/android
+    schedule:
+      interval: weekly

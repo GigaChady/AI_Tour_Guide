@@ -10,6 +10,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -33,11 +35,14 @@ fun ScreenTopBar(
         },
         navigationIcon = {
             if (hasBackButton) {
-                IconButton(onClick = {
-                    scope.launch {
-                        backStack.removeLastOrNull()
+                IconButton(
+                    modifier = Modifier.testTag("top_bar_back"),
+                    onClick = {
+                        scope.launch {
+                            backStack.removeLastOrNull()
+                        }
                     }
-                }) {
+                ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Default.ArrowBack,
                         contentDescription = stringResource(R.string.app_bar_hamburger_menu_content_description)

@@ -38,6 +38,8 @@ fun OnboardingFinishStepScreen(
         modifier = modifier,
         headerTitle = stringResource(R.string.onboarding_step5_header_text_header),
         headerBody = stringResource(R.string.onboarding_step5_header_text_body),
-        buttonLabel = stringResource(R.string.onboarding_step5_get_started_btn_content)
+        buttonLabel = stringResource(R.string.onboarding_step5_get_started_btn_content),
+        screenTestTag = "onboarding_finish_screen",
+        buttonTestTag = "onboarding_finish_next"
     )
 }

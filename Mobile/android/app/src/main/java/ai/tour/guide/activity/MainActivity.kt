@@ -13,6 +13,9 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import org.koin.android.ext.android.inject
 
 class MainActivity : ComponentActivity() {
@@ -45,7 +48,12 @@ class MainActivity : ComponentActivity() {
                         Route.Dashboard
                     }
                     key(completed) {
-                        AppNavigationDisplay(initialRoute = startRoute)
+                        AppNavigationDisplay(
+                            modifier = Modifier.semantics {
+                                testTagsAsResourceId = true
+                            },
+                            initialRoute = startRoute
+                        )
                     }
                 }
             }

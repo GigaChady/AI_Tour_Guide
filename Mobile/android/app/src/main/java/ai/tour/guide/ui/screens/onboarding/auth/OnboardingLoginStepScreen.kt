@@ -5,6 +5,7 @@ import ai.tour.guide.ui.components.onboarding.LoadingOverlay
 import ai.tour.guide.ui.components.onboarding.OnboardingWelcomeText
 import ai.tour.guide.ui.components.shared.ToastOnRequestError
 import ai.tour.guide.ui.navigation.Route
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,14 +31,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleStartEffect
@@ -66,7 +66,9 @@ fun OnboardingLoginStepScreen(
 
     ToastOnRequestError(viewModel = viewModel)
     Surface(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .testTag("onboarding_login_screen"),
         color = MaterialTheme.colorScheme.background
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -80,13 +82,17 @@ fun OnboardingLoginStepScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("login_email_input"),
                         value = viewModelState.data.email,
                         onValueChange = { viewModel.onEmailChanged(it) },
                         label = { Text(stringResource(R.string.onboarding_step2_email_input_title)) }
                     )
                     OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("login_password_input"),
                         value = viewModelState.data.password,
                         onValueChange = { viewModel.onPasswordChanged(it) },
                         visualTransformation = PasswordVisualTransformation(),
@@ -143,17 +149,14 @@ fun RegisterLink(onClick: () -> Unit) {
     val registerLinkText = buildAnnotatedString {
         append(stringResource(R.string.onboarding_step2_no_account_question))
         append(" ")
-        withLink(
-            LinkAnnotation.Clickable(
-                tag = "register",
-                styles = TextLinkStyles(style = SpanStyle(color = MaterialTheme.colorScheme.primary)),
-                linkInteractionListener = { onClick() }
-            )
-        ) {
+        withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary)) {
             append(stringResource(R.string.onboarding_step2_register_span))
         }
     }
     Text(
+        modifier = Modifier
+            .testTag("login_sign_up")
+            .clickable { onClick() },
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurface,
         text = registerLinkText

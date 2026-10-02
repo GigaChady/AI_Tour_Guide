@@ -1,0 +1,211 @@
+appId: ai.tour.guide.dev
+---
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+
+- extendedWaitUntil:
+    visible:
+      id: "onboarding_welcome_screen"
+    timeout: 15000
+- tapOn:
+    id: "onboarding_welcome_next"
+
+- extendedWaitUntil:
+    visible:
+      id: "onboarding_login_screen"
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: "login_email_input"
+    timeout: 10000
+- extendedWaitUntil:
+    visible:
+      id: "login_password_input"
+    timeout: 10000
+- tapOn:
+    id: "login_sign_up"
+
+- extendedWaitUntil:
+    visible:
+      id: "onboarding_register_screen"
+    timeout: 15000
+- tapOn:
+    id: "registration_name_input"
+- inputText: "Mobile E2E User"
+- tapOn:
+    id: "registration_email_input"
+- inputRandomEmail
+- tapOn:
+    id: "registration_password_input"
+- inputText: "Testpass1234*"
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: "registration_confirm_password_input"
+    direction: DOWN
+    timeout: 10000
+    visibilityPercentage: 50
+- tapOn:
+    id: "registration_confirm_password_input"
+- inputText: "Testpass1234*"
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: "registration_submit"
+    direction: DOWN
+    timeout: 10000
+    visibilityPercentage: 50
+- tapOn:
+    id: "registration_submit"
+
+- extendedWaitUntil:
+    visible:
+      id: "onboarding_preferences_screen"
+    timeout: 20000
+- scrollUntilVisible:
+    element:
+      id: "preference_gender_male"
+    direction: DOWN
+    timeout: 15000
+    visibilityPercentage: 50
+- tapOn:
+    id: "preference_gender_male"
+- scrollUntilVisible:
+    element:
+      id: "preference_interests_history"
+    direction: DOWN
+    timeout: 15000
+    visibilityPercentage: 50
+- tapOn:
+    id: "preference_interests_history"
+- scrollUntilVisible:
+    element:
+      id: "preferences_next"
+    direction: DOWN
+    timeout: 10000
+    visibilityPercentage: 50
+- tapOn:
+    id: "preferences_next"
+
+- extendedWaitUntil:
+    visible:
+      id: "onboarding_finish_screen"
+    timeout: 20000
+- tapOn:
+    id: "onboarding_finish_next"
+
+- extendedWaitUntil:
+    visible:
+      id: "dashboard_screen"
+    timeout: 20000
+- tapOn:
+    id: "app_menu"
+- extendedWaitUntil:
+    visible:
+      id: "drawer_profile"
+    timeout: 10000
+- tapOn:
+    id: "drawer_profile"
+
+- extendedWaitUntil:
+    visible:
+      id: "profile_screen"
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: "save_button"
+    direction: DOWN
+    timeout: 10000
+    visibilityPercentage: 50
+- tapOn:
+    id: "save_button"
+- extendedWaitUntil:
+    visible:
+      id: "profile_screen"
+    timeout: 10000
+- tapOn:
+    id: "app_menu"
+- extendedWaitUntil:
+    visible:
+      id: "drawer_settings"
+    timeout: 10000
+- tapOn:
+    id: "drawer_settings"
+
+- extendedWaitUntil:
+    visible:
+      id: "settings_screen"
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: "save_button"
+    direction: DOWN
+    timeout: 10000
+    visibilityPercentage: 50
+- tapOn:
+    id: "save_button"
+- extendedWaitUntil:
+    visible:
+      id: "settings_screen"
+    timeout: 10000
+- tapOn:
+    id: "app_menu"
+- extendedWaitUntil:
+    visible:
+      id: "drawer_dashboard"
+    timeout: 10000
+- tapOn:
+    id: "drawer_dashboard"
+
+- extendedWaitUntil:
+    visible:
+      id: "dashboard_screen"
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: "dashboard_start_tour"
+    direction: DOWN
+    timeout: 10000
+    visibilityPercentage: 50
+- tapOn:
+    id: "dashboard_start_tour"
+
+- extendedWaitUntil:
+    visible:
+      id: "tour_screen"
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: "tour_open_map"
+    timeout: 15000
+- tapOn:
+    id: "tour_open_map"
+
+- extendedWaitUntil:
+    visible:
+      id: "map_screen"
+    timeout: 20000
+- extendedWaitUntil:
+    visible:
+      id: "top_bar_back"
+    timeout: 10000
+- tapOn:
+    id: "top_bar_back"
+
+- extendedWaitUntil:
+    visible:
+      id: "tour_screen"
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: "tour_end"
+    timeout: 10000
+- tapOn:
+    id: "tour_end"
+
+- extendedWaitUntil:
+    visible:
+      id: "tour_summary_screen"
+    timeout: 20000

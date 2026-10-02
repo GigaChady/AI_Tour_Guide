@@ -30,6 +30,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -184,9 +185,12 @@ fun AppNavigationDisplay(modifier: Modifier = Modifier, initialRoute: Route = Ro
 @Composable
 fun TourAudioPlayerMapIcon(modifier: Modifier = Modifier, backStack: NavBackStack<NavKey>) {
     val scope = rememberCoroutineScope()
-    IconButton(modifier = modifier, onClick = {
-        scope.launch { backStack.add(Route.MapUserPosition) }
-    }) {
+    IconButton(
+        modifier = modifier.testTag("tour_open_map"),
+        onClick = {
+            scope.launch { backStack.add(Route.MapUserPosition) }
+        }
+    ) {
         Icon(
             imageVector = Icons.Default.LocationOn,
             contentDescription = stringResource(R.string.app_bar_map_icon_tour_content_description)

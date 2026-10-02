@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -49,7 +50,9 @@ fun OnboardingPreferencesStepScreen(
     }
 
     Surface(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .testTag("onboarding_preferences_screen"),
         color = MaterialTheme.colorScheme.background
     ) {
         Column() {
@@ -75,6 +78,7 @@ fun OnboardingPreferencesStepScreen(
                     modifier = Modifier.fillMaxWidth(),
                 )
                 ExtendedFloatingActionButton(
+                    modifier = Modifier.testTag("preferences_next"),
                     onClick = {
                         viewModel.onSavePreferencesClicked()
                     },

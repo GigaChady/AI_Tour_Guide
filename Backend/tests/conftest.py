@@ -10,6 +10,7 @@ from app.main import app
 from app.core.database import get_db
 
 TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5433/test_db"
+IS_E2E = os.getenv("E2E_TESTS") == "1"
 
 test_engine = create_async_engine(TEST_DATABASE_URL, poolclass=NullPool, echo=False)
 TestSessionLocal = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
@@ -18,6 +19,10 @@ TestSessionLocal = async_sessionmaker(test_engine, class_=AsyncSession, expire_o
 @pytest.fixture(scope="session", autouse=True)
 async def setup_database():
     """Drop and recreate all tables once per test session."""
+    if IS_E2E:
+        yield
+        return
+
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
@@ -29,6 +34,10 @@ async def setup_database():
 
 @pytest.fixture(scope="session", autouse=True)
 def patch_startup():
+    if IS_E2E:
+        yield
+        return
+
     with (
         patch("app.main.init_db", new=AsyncMock()),
         patch("app.main.init_redis", new=AsyncMock()),
@@ -40,6 +49,10 @@ def patch_startup():
 
 @pytest.fixture(scope="session", autouse=True)
 async def override_get_db(setup_database):
+    if IS_E2E:
+        yield
+        return
+
     async def _get_test_db():
         async with TestSessionLocal() as session:
             try:

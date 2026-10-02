@@ -15,6 +15,7 @@ import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 
@@ -32,6 +33,7 @@ fun DrawerContent(
             style = MaterialTheme.typography.titleLarge,
         )
         NavigationDrawerItem(
+            modifier = Modifier.testTag("drawer_dashboard"),
             label = { Text(stringResource(R.string.navigation_drawer_item_dashboard)) },
             selected = selectedRoute == Route.Dashboard,
             onClick = { onRouteSelected(Route.Dashboard) },
@@ -43,6 +45,7 @@ fun DrawerContent(
             }
         )
         NavigationDrawerItem(
+            modifier = Modifier.testTag("drawer_profile"),
             label = { Text(stringResource(R.string.navigation_drawer_item_profile)) },
             selected = selectedRoute == Route.Profile,
             onClick = { onRouteSelected(Route.Profile) },
@@ -54,6 +57,7 @@ fun DrawerContent(
             }
         )
         NavigationDrawerItem(
+            modifier = Modifier.testTag("drawer_settings"),
             label = { Text(stringResource(R.string.navigation_drawer_item_app_settings)) },
             selected = selectedRoute == Route.Settings,
             onClick = { onRouteSelected(Route.Settings) },

@@ -1,0 +1,261 @@
+name: Tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+env:
+  JWT_SECRET_KEY: test-secret
+  JWT_ALGORITHM: HS256
+  GOOGLE_CLIENT_ID: test-google-client
+  KEYCLOAK_SERVER_URL: http://localhost:8080
+  KEYCLOAK_INTERNAL_URL: http://localhost:8080
+  KEYCLOAK_REALM: tourguide
+  KEYCLOAK_CLIENT_ID: web-client
+  KEYCLOAK_CLIENT_SECRET: web-secret
+  KEYCLOAK_REDIRECT_URI: http://localhost:8000/auth/keycloak/callback
+  FRONTEND_URL: http://localhost:3000
+  REDIS_URL: redis://localhost:6379/0
+  TTS_PROVIDER: edge
+  AI_MOCK: "True"
+
+jobs:
+  backend-unit:
+    name: Backend unit tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4-alpine
+        env:
+          POSTGRES_DB: test_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d test_db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5433/test_db
+      TEST_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5433/test_db
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: Backend/requirements.txt
+      - name: Install backend dependencies
+        run: pip install -r Backend/requirements.txt
+      - name: Run backend unit tests
+        working-directory: Backend
+        run: pytest tests --ignore=tests/e2e
+
+  ai-unit:
+    name: AI unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: AI/requirements.txt
+      - name: Install AI dependencies
+        run: pip install -r AI/requirements.txt pytest
+      - name: Run AI unit tests
+        working-directory: AI
+        run: pytest tests
+
+  mobile-unit:
+    name: Mobile unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Make Gradle wrapper executable
+        working-directory: Mobile/android
+        run: chmod +x ./gradlew
+      - name: Run Android JVM unit tests
+        working-directory: Mobile/android
+        run: ./gradlew testDevDebugUnitTest
+
+  mobile-e2e:
+    name: Mobile E2E tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        working-directory: Mobile/android
+        run: chmod +x ./gradlew
+
+      - name: Build dev debug APK
+        working-directory: Mobile/android
+        run: ./gradlew assembleDevDebug
+
+      - name: Install Maestro
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+
+      - name: Start backend stack
+        run: docker compose -f docker-compose.ci.yml up -d --build api ai
+
+      - name: Wait for backend API
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:8000/health; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          docker compose -f docker-compose.ci.yml logs api ai
+          exit 1
+
+      # KVM permissions are required for running Android emulator in GitHub Actions.
+      - name: Enable KVM for Android emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Create and start Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          disable-animations: true
+          script: |
+            adb wait-for-device
+
+            adb install -r -d Mobile/android/app/build/outputs/apk/dev/debug/app-dev-debug.apk
+
+            adb shell settings put secure location_mode 3 || true
+            adb shell pm grant ai.tour.guide.dev android.permission.ACCESS_FINE_LOCATION || true
+            adb shell pm grant ai.tour.guide.dev android.permission.ACCESS_COARSE_LOCATION || true
+
+            adb reverse tcp:8000 tcp:8000
+            adb reverse tcp:9000 tcp:9000
+
+            adb shell am force-stop ai.tour.guide.dev || true
+
+            maestro test Mobile/android/app/src/test/e2e/maestro
+
+      - name: Stop backend stack
+        if: always()
+        run: docker compose -f docker-compose.ci.yml down -v --remove-orphans
+
+  backend-e2e:
+    name: Backend E2E tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start backend stack
+        run: docker compose -f docker-compose.ci.yml up -d --build api ai
+      - name: Wait for backend API
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:8000/health; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker compose -f docker-compose.ci.yml logs api ai
+          exit 1
+      - name: Run E2E smoke tests
+        run: docker compose -f docker-compose.ci.yml exec -T -e E2E_TESTS=1 api pytest tests/e2e
+      - name: Stop backend stack
+        if: always()
+        run: docker compose -f docker-compose.ci.yml down -v --remove-orphans
+
+  security-bandit:
+    name: Static security scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Run Bandit
+        run: |
+          pip install bandit
+          bandit -r Backend AI -x "*/tests/*" --severity-level medium
+
+  dependency-audit:
+    name: Dependency vulnerability scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Audit Python dependencies
+        run: |
+          pip install pip-audit
+          pip-audit -r Backend/requirements.txt
+          pip-audit -r AI/requirements.txt
+
+  performance-smoke:
+    name: Backend performance test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start backend stack
+        run: docker compose -f docker-compose.ci.yml up -d --build api ai
+      - name: Wait for backend API
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:8000/health; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker compose -f docker-compose.ci.yml logs api ai
+          exit 1
+      - name: Run Locust smoke test
+        run: docker compose -f docker-compose.ci.yml run --rm locust
+      - name: Stop backend stack
+        if: always()
+        run: docker compose -f docker-compose.ci.yml down -v --remove-orphans

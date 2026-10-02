@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
@@ -53,26 +54,34 @@ fun UserRegistrationFragment(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("registration_name_input"),
                 value = viewModelState.data.name,
                 onValueChange = { viewModel.onNameChanged(it) },
                 label = { Text(stringResource(R.string.onboarding_step3_name_input_title)) }
             )
             OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("registration_email_input"),
                 value = viewModelState.data.email,
                 onValueChange = { viewModel.onEmailChanged(it) },
                 label = { Text(stringResource(R.string.onboarding_step3_email_input_title)) }
             )
             OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("registration_password_input"),
                 value = viewModelState.data.password,
                 visualTransformation = PasswordVisualTransformation(),
                 onValueChange = { viewModel.onPasswordChanged(it) },
                 label = { Text(stringResource(R.string.onboarding_step3_password_input_title)) }
             )
             OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("registration_confirm_password_input"),
                 value = viewModelState.data.confirmPassword,
                 visualTransformation = PasswordVisualTransformation(),
                 onValueChange = { viewModel.onConfirmPasswordChanged(it) },
@@ -88,7 +97,9 @@ fun UserRegistrationFragment(
             Button(
                 onClick = { viewModel.onRegisterClicked() },
                 shape = MaterialTheme.shapes.large,
-                modifier = Modifier.fillMaxWidth(0.8f)
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .testTag("registration_submit")
             ) {
                 Icon(Icons.Default.Check, null)
                 if (ctaButtonText != null) {
