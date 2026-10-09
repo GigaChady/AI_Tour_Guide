@@ -1,0 +1,1 @@
+"""Wikimedia knowledge adapter package."""

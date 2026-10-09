@@ -1,8 +1,12 @@
-from schemas import LocationAddress
-from integrations.overpass.overpass_models import OverpassResponse
-from integrations.overpass.overpass_poi_parser import OverpassPoiParser
-from tasks.location_discovery_task import LocationDiscoveryTask
-from schemas import NarrationDetailLevel, NarrationLanguage, NarrationSettings
+from integrations.poi.overpass.overpass_models import OverpassResponse
+from integrations.poi.overpass.overpass_poi_parser import OverpassPoiParser
+from narration.location_discovery.location_discovery_task import LocationDiscoveryTask
+from narration.schemas import (
+    LocationAddress,
+    NarrationDetailLevel,
+    NarrationLanguage,
+    NarrationSettings,
+)
 
 
 class FakeGeocodingClient:
@@ -93,14 +97,12 @@ def test_location_processor_uses_clients_and_parser():
     overpass_client = FakeOverpassClient(overpass_data)
 
     processor = LocationDiscoveryTask(
-        narration_settings=_settings(),
-        user_agent="test-agent",
         geocoding_client=geocoding_client,
-        overpass_client=overpass_client,
+        poi_data_client=overpass_client,
         poi_parser=OverpassPoiParser(),
     )
 
-    details = processor.get_location_details()
+    details = processor.get_location_details(_settings())
 
     assert details.address.city == "Krakow"
     assert details.candidates[0].name == "Museum"

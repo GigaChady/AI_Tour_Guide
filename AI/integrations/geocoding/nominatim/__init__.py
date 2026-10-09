@@ -1,0 +1,1 @@
+"""Nominatim geocoding adapter package."""

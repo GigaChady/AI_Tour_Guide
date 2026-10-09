@@ -1,6 +1,6 @@
-from parsers.narration_response_parser import NarrationResponseParser
-from prompts.filtering_prompt_builder import FilteringPromptBuilder
-from prompts.narration_prompt_builder import NarrationPromptBuilder
+from narration.information_filtering.prompts.filtering_prompt_builder import FilteringPromptBuilder
+from narration.narration_generation.parsers.narration_response_parser import NarrationResponseParser
+from narration.narration_generation.prompts.narration_prompt_builder import NarrationPromptBuilder
 
 
 def test_narration_prompt_builder_returns_system_and_user_messages():

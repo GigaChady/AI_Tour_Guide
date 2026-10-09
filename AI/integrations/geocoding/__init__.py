@@ -1,3 +1,3 @@
-from integrations.geocoding.nominatim_client import NominatimClient
+"""Geocoding adapter package."""
 
 __all__ = ["NominatimClient"]

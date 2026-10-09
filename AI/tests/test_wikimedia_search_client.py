@@ -1,5 +1,5 @@
-from integrations.search.wikimedia_search_client import WikimediaSearchClient
-from schemas import LocationAddress, PoiCandidate, SelectedPoi
+from integrations.knowledge.wikimedia.wikimedia_search_client import WikimediaSearchClient
+from narration.schemas import LocationAddress, PoiCandidate, SelectedPoi
 
 
 class FakeResponse:

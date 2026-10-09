@@ -1,5 +1,5 @@
-from schemas import PoiCandidate
-from tasks.poi_selection_task import PoiSelectionTask
+from narration.poi_selection.poi_selection_task import PoiSelectionTask
+from narration.schemas import PoiCandidate
 
 
 def test_poi_selection_prefers_nearest_candidate_when_popularity_is_equal():

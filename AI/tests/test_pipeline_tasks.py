@@ -1,8 +1,14 @@
-from schemas import LocationAddress, PoiCandidate, SelectedPoi
-from tasks.information_filtering_task import InformationFilteringTask
-from tasks.narration_generation_task import NarrationGenerationTask
-from tasks.poi_enrichment_task import PoiEnrichmentTask
-from schemas import NarrationDetailLevel, NarrationLanguage, NarrationSettings
+from narration.information_filtering.information_filtering_task import InformationFilteringTask
+from narration.narration_generation.narration_generation_task import NarrationGenerationTask
+from narration.poi_enrichment.poi_enrichment_task import PoiEnrichmentTask
+from narration.schemas import (
+    LocationAddress,
+    NarrationDetailLevel,
+    NarrationLanguage,
+    NarrationSettings,
+    PoiCandidate,
+    SelectedPoi,
+)
 
 
 class FakeSearchAgent:
@@ -36,13 +42,13 @@ class FakeFilteringAgent:
     def __init__(self):
         self.enriched_poi = None
 
-    def filter_information(self, enriched_poi):
+    def filter_information(self, enriched_poi, narration_settings):
         self.enriched_poi = enriched_poi
         return f"Facts for {enriched_poi.poi.name}: {enriched_poi.to_context_text()}"
 
 
 class FakeNarrationAgent:
-    def generate_narration(self, location_name, location_info):
+    def generate_narration(self, location_name, location_info, narration_settings):
         return {
             "location": location_name,
             "narration": f"Narration from {location_info}",
@@ -170,7 +176,10 @@ def test_filtering_and_narration_tasks_return_domain_models():
     )
 
     filtering_agent = FakeFilteringAgent()
-    facts = InformationFilteringTask(filtering_agent=filtering_agent).run(enriched)
+    facts = InformationFilteringTask(filtering_agent=filtering_agent).run(
+        enriched,
+        _settings(),
+    )
     narration = NarrationGenerationTask(
         narrative_generation_agent=FakeNarrationAgent()
     ).run(facts, _settings())

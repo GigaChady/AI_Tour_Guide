@@ -1,97 +1,181 @@
-# AI service (dev)
+# AI service
 
-##  Status
+Serwis AI odbiera lokalizacje z Redis Stream, uruchamia pipeline narracyjny i publikuje listę POI oraz opcjonalną narrację na kanale przypisanym do sesji.
 
-Serwis AI jest **mockowany** i **gotowy do podłączenia**. Pracuje z `location:events` (Redis Stream z backendu) i publikuje wyniki na kanał `tour:{session_id}`. Opis dokładnych schematów danych znajduje się w folderze `schemas`.
+## Przepływ danych
 
-**Domyślnie nie wymaga Ollamy ani instalacji modeli LLM** — wystarczy skopiować `.env.example` i uruchomić `docker compose up`.
+```text
+Backend
+  -> Redis Stream: location:events
+  -> RedisStreamWorker
+  -> NarrationEventHandler
+  -> TourNarrationPipeline
+  -> Redis Pub/Sub: tour:{session_id}
+```
 
-## Jak to działa (aktualne)
+Worker publikuje:
 
-1. Worker czyta ze streamu `location:events` (wysyłane przez backend)
-2. Przetwarza event w trybie mock: generuje mockowane `pois` i `narration`
-3. Publikuje wynik na kanał Redis `tour:{session_id}` (frontend/backend je odbiera)
+- komunikat `pois` z wybranymi punktami zainteresowania,
+- komunikat `narration` z wygenerowanym tekstem, jeżeli event wymaga narracji.
 
-**Nie trzeba nic zmieniać w `.env`** — domyślnie `AI_MOCK=true` i serwis pracuje bez Ollamy.
+Oba komunikaty dla jednego wyniku otrzymują wspólne `narration_id`.
 
-## Uruchomienie (domyślny tryb mock, bez zmian)
+## Struktura kodu
+
+```text
+AI/
+├── main.py                 # punkt wejścia
+├── bootstrap.py            # tworzenie i łączenie zależności
+├── app_config.py           # ustawienia całej aplikacji
+├── narration/              # kompletny pipeline narracyjny
+├── workers/                # odbiór i publikowanie zdarzeń
+├── integrations/           # adaptery zewnętrznych usług
+├── photos/                 # wybór i zapis obrazów POI
+└── shared/                 # małe współdzielone mechanizmy
+```
+
+### `narration/`
+
+```text
+narration/
+├── pipeline.py             # kolejność wykonywania kroków i default()
+├── steps.py                # kontrakty kroków pipeline'u
+├── config/                 # globalne ustawienia narracji
+├── schemas/                # modele wejścia i wyników pipeline'u
+├── location_discovery/     # adres i pobliskie POI
+├── poi_selection/          # ranking i wybór POI
+├── poi_enrichment/         # dodatkowe informacje o POI
+├── information_filtering/  # przygotowanie kontekstu
+└── narration_generation/   # prompt, model i parser narracji
+```
+
+`TourNarrationPipeline` jest bezstanowy. Tworzy się go raz, a dane konkretnego zdarzenia przekazuje przez `NarrationPipelineRequest`:
+
+```python
+request = NarrationPipelineRequest(
+    session_id=session_id,
+    settings=narration_settings,
+)
+
+result = pipeline.run(request)
+```
+
+`pipeline.py` zna kontrakty z `steps.py`, a implementacje znajdują się w katalogach poszczególnych kroków. Kontrakty zewnętrznych dostawców są umieszczone przy krokach, które ich potrzebują.
+
+### `workers/`
+
+`workers/redis_narration/redis_stream_worker.py` obsługuje wyłącznie transport Redis: odczyt streamu, preferencje, publikację i kursor.
+
+`NarrationEventHandler` obsługuje pojedynczy event, mapuje go na `NarrationPipelineRequest`, uruchamia pipeline i buduje wiadomości dla backendu.
+
+### `integrations/`
+
+Integracje implementują kontrakty z modułu narracyjnego:
+
+```text
+GeocodingClient       -> NominatimClient
+PoiDataClient         -> OverpassClient
+SearchClient          -> WikimediaSearchClient / DuckDuckGoSearchClient
+LanguageModel         -> NvidiaLanguageModel / OllamaLanguageModel
+SeenPoiRepository     -> RedisSeenPoiRepository
+ImageStorage          -> MinioImageStorage
+```
+
+Pipeline nie importuje konkretnych integracji. Wszystkie implementacje są łączone w `bootstrap.py`.
+
+## Kroki pipeline'u
+
+1. `LocationDiscoveryTask` pobiera adres z Nominatim i pobliskie POI z Overpass.
+2. `PoiSelectionTask` ocenia kandydatów na podstawie odległości, kategorii i sygnałów popularności.
+3. `PoiEnrichmentTask` pobiera kontekst z Wikimedia; w przypadku błędu tworzy ostrożny fallback z danych OSM.
+4. `InformationFilteringTask` przygotowuje kontekst zgodny z preferencjami użytkownika.
+5. `NarrationGenerationTask` buduje prompt, wywołuje model językowy i parsuje odpowiedź.
+
+Gdy `include_narration=false`, pipeline działa w trybie planowania: wybiera kilka POI i pomija enrichment oraz generowanie narracji.
+
+## Uruchomienie w trybie mock
+
+Tryb mock nie wymaga klucza NVIDIA ani usług geocodingowych.
 
 ```powershell
 Copy-Item .env.example .env
 docker compose up --build
 ```
 
-To wszystko. Worker podłączy się do Redisa, będzie czekać na `location:events` i publikować mock payload.
+Domyślna wartość to:
 
-## Dostępne tryby
+```dotenv
+AI_MOCK=true
+```
 
-- **`AI_MOCK=true`** (domyślnie) → mockowane `pois` + `narration`, bez Ollamy
-- **`AI_MOCK=false`** → live pipeline narracji (Nominatim + Overpass + Wikimedia + cloud LLM)
+## Uruchomienie live
 
-## Przełączenie na live — opcjonalnie
-
-Jeśli chcesz później uruchomić pełny pipeline z LLM:
-
-1. Zmień w `.env`:
+W `.env` ustaw:
 
 ```dotenv
 AI_MOCK=false
 NVIDIA_API_KEY=...
-```
-
-Opcjonalnie można ustawić:
-
-```dotenv
+NOMINATIM_USER_AGENT=AI-Tour-Guide/0.1 (contact: your-email@example.com)
 WIKIMEDIA_USER_AGENT=AI-Tour-Guide/0.1 (contact: your-email@example.com)
-CLOUD_NARRATIVE_MODEL_NAME=meta/llama-3.3-70b-instruct
-CLOUD_NARRATIVE_REQUEST_TIMEOUT_SECONDS=30
-CLOUD_NARRATIVE_MAX_RETRIES=2
-CLOUD_NARRATIVE_RETRY_BACKOFF_SECONDS=2.0
 ```
 
-2. Uruchom:
+Następnie:
 
 ```powershell
 docker compose up --build
 ```
 
-Worker będzie czekać na `location:events`, uruchomi full pipeline (POI discovery → Wikimedia enrichment → filtering/context → cloud generation) i publikować rzeczywistą narrację.
+Domyślny live pipeline korzysta z NVIDIA. Adapter Ollama pozostaje dostępny, ale nie jest podłączony przez `TourNarrationPipeline.default()`.
 
-## Jak działa część AI (szczegóły)
+## Konfiguracja
 
-Poniżej krótki opis głównych kroków pipeline'u AI oraz ważne uwagi dotyczące zdjęć i generowania narracji:
+Konfiguracja jest przechowywana przy komponencie, którego dotyczy:
 
-- Odbiór zdarzenia: worker czyta eventy z Redis Stream `location:events`. Event zawiera m.in. `session_id`, `lat`, `lng` i opcjonalnie flagi (np. `include_photos`).
-- Pobranie preferencji: przed generacją worker próbuje odczytać z Redisa klucz `preferences:{session_id}` (jeśli istnieje) i przekazać je dalej jako `UserPreferencesCache`.
-- Lokalizacja i POI: `LocationDiscoveryTask.get_location_details()` używa Nominatim (reverse geocoding) oraz Overpass (lub alternatywy), a następnie zwraca `LocationDiscoveryResult` z adresem oraz listą `PoiCandidate`.
-- Wybór POI: `PoiSelectionTask` ocenia listę POI przez scoring, który łączy odległość, kategorię oraz sygnały popularności (`wikipedia`, `wikidata`, `website`, `description`). Dzięki temu nie zawsze wygrywa najbliższy punkt; preferowane są obiekty bardziej rozpoznawalne i lepsze do narracji.
-- Enrichment i filtrowanie: `PoiEnrichmentTask` zbiera informacje o POI przez `WikimediaSearchClient`. Klient próbuje kolejno: tag `wikipedia` z OSM, tag `wikidata` z OSM, a potem wyszukiwanie w Wikipedia API po nazwie POI i lokalizacji. Jeśli Wikimedia nic nie zwróci, task buduje fallback context z metadanych OSM, żeby pipeline nadal mógł wygenerować ostrożną narrację.
-- Kontekst z Wikipedii: `WikimediaSearchClient` pobiera dłuższy extract z MediaWiki API (`prop=extracts`, plain text), limitowany domyślnie do ok. 2500 znaków. Krótkie `page/summary` jest używane tylko jako fallback, gdy dłuższy extract jest pusty albo niedostępny.
-- Generacja narracji: `CloudNarrativeAgent` generuje finalny tekst narracji przez NVIDIA/Cloud LLM. Wywołanie modelu ma timeout per próba oraz retry z backoffem, żeby chwilowe problemy serwera nie wieszały całego pipeline'u. W trybie mock zwracane są przykładowe teksty.
-- Zdjęcia (photos): na razie system używa zdjęć domyślnych przypisanych do kategorii POI (tzw. default photos). Oznacza to, że jeśli POI nie ma własnych zdjęć w zasobach projektu, zwracany jest obraz pasujący do kategorii (np. muzeum -> zdjęcie_muzeum.jpg). W przyszłości możliwe dodanie pobierania zdjęć z zasobów zewnętrznych lub generowania miniatur.
-- Publikacja: jeśli generacja powiodła się, worker publikuje dwa komunikaty na kanale Redis `tour:{session_id}`: jeden typu `pois` z listą POI oraz jeden typu `narration` z wygenerowanym tekstem (oraz ewentualnymi metadanymi i linkami do zdjęć).
+- `narration/config/` — globalne ustawienia narracji,
+- `narration/poi_selection/config/` — scoring oraz pamięć zobaczonych POI,
+- `narration/information_filtering/config/` — budowanie kontekstu,
+- `integrations/**/config/` — timeouty, modele i endpointy integracji,
+- `workers/redis_narration/config/` — ustawienia workera Redis,
+- `photos/config/` — mapowanie kategorii POI na obrazy.
 
-Ważne uwagi operacyjne:
-- Przy dużym obciążeniu publiczne endpointy Overpass mogą zwracać HTTP 429 lub timeouty — w takim przypadku warto rozważyć użycie alternatywnych usług (Google Places, własny Overpass dla regionu) lub cache'owanie wyników.
-- Wikimedia jest darmowym źródłem enrichmentu, ale wymaga sensownego `User-Agent`. Jeśli `WIKIMEDIA_USER_AGENT` nie jest ustawiony, aplikacja używa domyślnego `AI-Tour-Guide/0.1 (contact: unavailable)`.
-- DuckDuckGo searcher jest zachowany w repo jako niepodpięta klasa pomocnicza, ale domyślny live pipeline go nie używa.
-- Prefetch i cache: preferencje użytkownika są buforowane w Redisie pod kluczem `preferences:{session_id}` (format JSON z polem `interests: list[str]`). Dzięki temu dany session może mieć kontekst preferencji używany przy generacji.
-- Tryby pracy: w trybie `AI_MOCK=true` pipeline zwraca mockowane POI i narracje (szybkie do testów). W trybie `AI_MOCK=false` uruchamiany jest pełny flow z LLM i enrichmentiem Wikimedia.
+Konfiguracje integracji korzystają z `pydantic-settings` i zmiennych środowiskowych. Implementacje kroków otrzymują gotowe obiekty konfiguracyjne przez konstruktory.
 
-## Testowanie połączenia z Redisem
+## Testy
 
-Aby sprawdzić, czy worker prawidłowo odbiera wiadomości:
+W aktywnym środowisku Python z zależnościami projektu:
 
 ```powershell
-# W jednym oknie terminala (subskrypcja na wynik)
-cd ..\..\Backend
-docker compose exec redis redis-cli SUBSCRIBE tour:test-session-1
+cd AI
+$env:PYTHONPATH = (Get-Location).Path
+python -m pytest tests -q
+```
 
-# W innym oknie (wysłanie testowego eventu)
+Testy są ułożone zgodnie z modułami produkcyjnymi: pipeline, kroki, worker, mappery i integracje są testowane oddzielnie.
+
+## Ręczny test Redisa
+
+Subskrypcja wyniku:
+
+```powershell
+docker compose exec redis redis-cli SUBSCRIBE tour:test-session-1
+```
+
+Wysłanie lokalizacji:
+
+```powershell
 docker compose exec redis redis-cli XADD location:events "*" session_id test-session-1 lat 52.2297 lng 21.0122
 ```
 
-Powinno pojawić się:
-- `{"type": "pois", "data": [...]}`
-- `{"type": "narration", "data": {...}}`
+Oczekiwane komunikaty:
 
+```json
+{"type":"pois","data":[]}
+{"type":"narration","text":"..."}
+```
+
+## Uwagi operacyjne
+
+- Publiczne serwery Overpass mogą zwracać HTTP 429 lub timeouty; klient obsługuje rotację serwerów i retry.
+- Wikimedia wymaga poprawnego `User-Agent`.
+- DuckDuckGo i Ollama są zachowane jako alternatywne adaptery, ale nie są częścią domyślnego pipeline'u.
+- Zdjęcia są obecnie statycznymi obrazami przypisanymi do kategorii POI i przechowywanymi w MinIO.

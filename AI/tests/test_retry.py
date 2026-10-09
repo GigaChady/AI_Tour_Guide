@@ -2,7 +2,7 @@ import time
 
 import pytest
 
-from utils.retry import RetryTimeoutError, call_with_timeout_retry
+from shared.retry import RetryTimeoutError, call_with_timeout_retry
 
 
 def test_call_with_timeout_retry_returns_successful_result():

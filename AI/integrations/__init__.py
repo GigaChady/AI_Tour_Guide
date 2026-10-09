@@ -1,14 +1,2 @@
 
-from integrations.contracts import (
-    GeocodingClient,
-    PoiDataClient,
-    PoiParser,
-    SearchClient,
-)
-
-__all__ = [
-    "GeocodingClient",
-    "PoiDataClient",
-    "PoiParser",
-    "SearchClient",
-]
+"""Adapters for external services used by the AI application."""

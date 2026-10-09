@@ -1,6 +1,6 @@
-from schemas import NarrationResult, PoiCandidate
-from schemas import BackendMessageMapper
-from schemas import LocationEvent, NarrationDetailLevel, PreferencesEvent
+from narration.schemas import NarrationDetailLevel, NarrationResult, PoiCandidate
+from workers.redis_narration.backend_message_mapper import BackendMessageMapper
+from workers.redis_narration.messages import LocationEvent, PreferencesEvent
 
 
 class FakeDefaults:

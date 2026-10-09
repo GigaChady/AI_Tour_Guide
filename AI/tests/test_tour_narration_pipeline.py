@@ -1,14 +1,21 @@
-from schemas import LocationAddress, LocationDiscoveryResult, PoiCandidate
-from pipeline.tour_narration_pipeline import TourNarrationPipeline
-from tasks.information_filtering_task import InformationFilteringTask
-from tasks.narration_generation_task import NarrationGenerationTask
-from tasks.poi_enrichment_task import PoiEnrichmentTask
-from tasks.poi_selection_task import PoiSelectionTask
-from schemas import NarrationDetailLevel, NarrationLanguage, NarrationSettings
+from narration.information_filtering.information_filtering_task import InformationFilteringTask
+from narration.narration_generation.narration_generation_task import NarrationGenerationTask
+from narration.pipeline import TourNarrationPipeline
+from narration.poi_enrichment.poi_enrichment_task import PoiEnrichmentTask
+from narration.poi_selection.poi_selection_task import PoiSelectionTask
+from narration.schemas import (
+    LocationAddress,
+    LocationDiscoveryResult,
+    NarrationDetailLevel,
+    NarrationLanguage,
+    NarrationPipelineRequest,
+    NarrationSettings,
+    PoiCandidate,
+)
 
 
 class FakeLocationDiscoveryStep:
-    def get_location_details(self):
+    def get_location_details(self, narration_settings):
         return LocationDiscoveryResult(
             address=LocationAddress(
                 raw={
@@ -42,12 +49,17 @@ class FakeSearchClient:
 
 
 class FakeFilteringAgent:
-    def filter_information(self, enriched_poi):
+    def filter_information(self, enriched_poi, narration_settings):
         return f"Filtered facts about {enriched_poi.poi.name}: {enriched_poi.to_context_text()}"
 
 
 class FakeNarrativeGenerationAgent:
-    def generate_narration(self, location_name: str, location_info: str):
+    def generate_narration(
+        self,
+        location_name: str,
+        location_info: str,
+        narration_settings,
+    ):
         return {
             "location": location_name,
             "narration": f"Narration based on {location_info}",
@@ -55,8 +67,7 @@ class FakeNarrativeGenerationAgent:
 
 
 def _pipeline(include_narration=True, search_client=None):
-    return TourNarrationPipeline(
-        narration_settings=_settings(include_narration=include_narration),
+    pipeline = TourNarrationPipeline(
         location_discovery_step=FakeLocationDiscoveryStep(),
         poi_selection_step=PoiSelectionTask(),
         poi_enrichment_step=PoiEnrichmentTask(
@@ -69,6 +80,11 @@ def _pipeline(include_narration=True, search_client=None):
             narrative_generation_agent=FakeNarrativeGenerationAgent()
         ),
     )
+    request = NarrationPipelineRequest(
+        session_id="session-1",
+        settings=_settings(include_narration=include_narration),
+    )
+    return pipeline, request
 
 
 def _settings(include_narration=True):
@@ -85,9 +101,9 @@ def _settings(include_narration=True):
 
 def test_pipeline_runs_all_steps_and_returns_narration():
     search_client = FakeSearchClient()
-    pipeline = _pipeline(search_client=search_client)
+    pipeline, request = _pipeline(search_client=search_client)
 
-    result = pipeline.run()
+    result = pipeline.run(request)
 
     assert result.poi is not None
     assert result.poi.name == "Town Hall Tower"
@@ -106,11 +122,12 @@ def test_pipeline_runs_all_steps_and_returns_narration():
 
 
 def test_pipeline_skips_narration_when_disabled():
-    pipeline = _pipeline(include_narration=False)
+    pipeline, request = _pipeline(include_narration=False)
 
-    result = pipeline.run()
+    result = pipeline.run(request)
 
-    assert result.poi is not None
-    assert result.enriched_poi is not None
+    assert len(result.selected_pois) == 1
+    assert result.selected_pois[0].poi.name == "Town Hall Tower"
+    assert result.enriched_poi is None
     assert result.filtered_facts is None
     assert result.narration is None

@@ -64,8 +64,10 @@ services:
   ai:
     build: .
     container_name: ai-narration
+    env_file: .env
     environment:
-      - AI_MOCK=${AI_MOCK:-False} # seitch to true to mock the AI response for testing
+      - AI_MOCK=${AI_MOCK:-true}
+      - AI_RUN_STREAM_WORKER=${AI_RUN_STREAM_WORKER:-true}
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
       - PYTHONUNBUFFERED=1
