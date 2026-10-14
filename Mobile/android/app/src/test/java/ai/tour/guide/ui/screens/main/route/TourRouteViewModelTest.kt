@@ -4,11 +4,15 @@ import ai.tour.guide.data.room.AppDatabase
 import ai.tour.guide.data.room.dao.RouteStopDao
 import ai.tour.guide.domain.AppEventBus
 import ai.tour.guide.domain.route.RouteNarrationPlaybackService
+import ai.tour.guide.domain.route.RouteNavigationState
 import ai.tour.guide.domain.route.RoutePlaybackState
 import ai.tour.guide.domain.route.RouteService
+import ai.tour.guide.domain.route.RouteSessionBackgroundService
 import android.app.Application
+import androidx.test.core.app.ApplicationProvider
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.verify
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,11 +26,13 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -41,6 +47,7 @@ class TourRouteViewModelTest {
     private lateinit var appDatabase: AppDatabase
     private lateinit var routeStopDao: RouteStopDao
     private lateinit var viewModel: TourRouteViewModel
+    private lateinit var appContext: Application
 
     @Before
     fun setUp() {
@@ -54,6 +61,7 @@ class TourRouteViewModelTest {
 
         every { routeAudioService.isPlayingFlow } returns MutableStateFlow(false)
         every { routeAudioService.playbackStateFlow } returns MutableStateFlow(RoutePlaybackState())
+        every { routeAudioService.navigationStateFlow } returns MutableStateFlow(RouteNavigationState())
         every { routeService.currentSessionIdFlow } returns MutableStateFlow(null)
         every { appEventBus.eventsFlow } returns MutableSharedFlow()
         every { appDatabase.routeStopDao() } returns routeStopDao
@@ -64,7 +72,10 @@ class TourRouteViewModelTest {
         every { routeStopDao.getLatestStopIdForServerSession(any()) } returns flowOf(null)
         every { routeStopDao.narrationFilesExistsForCurrentSession(any()) } returns flowOf(false)
 
-        viewModel = TourRouteViewModel(routeAudioService, routeService, appEventBus, appDatabase)
+        appContext = ApplicationProvider.getApplicationContext()
+        viewModel = TourRouteViewModel(
+            appContext, routeAudioService, routeService, appEventBus, appDatabase
+        )
     }
 
     @After
@@ -94,19 +105,13 @@ class TourRouteViewModelTest {
     }
 
     @Test
-    fun `onDestroy calls routeAudioService onDestroy`() = runTest {
+    fun `onDestroy stops RouteSessionBackgroundService`() = runTest {
         viewModel.onDestroy()
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { routeAudioService.onDestroy() }
-    }
-
-    @Test
-    fun `onDestroy calls routeService onDestroy`() = runTest {
-        viewModel.onDestroy()
-        advanceUntilIdle()
-
-        coVerify(exactly = 1) { routeService.onDestroy() }
+        val stopped = shadowOf(appContext).nextStoppedService
+        assertNotNull(stopped)
+        assertEquals(RouteSessionBackgroundService::class.java.name, stopped.component?.className)
     }
 
     @Test
@@ -118,26 +123,26 @@ class TourRouteViewModelTest {
     }
 
     @Test
-    fun `onStart calls routeService onStart`() = runTest {
+    fun `onStart starts RouteSessionBackgroundService`() = runTest {
         viewModel.onStart()
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { routeService.onStart() }
+        val started = shadowOf(appContext).nextStartedService
+        assertNotNull(started)
+        assertEquals(RouteSessionBackgroundService::class.java.name, started.component?.className)
     }
 
     @Test
-    fun `onNextClicked when offset is zero calls routeService sendLastKnownLocation`() = runTest {
+    fun `onNextClicked delegates to routeAudioService skipToNext`() {
         viewModel.onNextClicked()
-        advanceUntilIdle()
 
-        coVerify(exactly = 1) { routeService.sendLastKnownLocation() }
+        verify(exactly = 1) { routeAudioService.skipToNext() }
     }
 
     @Test
-    fun `onPrevClicked does not change state when totalStops is null`() = runTest {
+    fun `onPrevClicked delegates to routeAudioService skipToPrevious`() {
         viewModel.onPrevClicked()
-        advanceUntilIdle()
 
-        assertEquals(0, viewModel.viewStateFlow.value.data.currentHistoryOffset)
+        verify(exactly = 1) { routeAudioService.skipToPrevious() }
     }
 }

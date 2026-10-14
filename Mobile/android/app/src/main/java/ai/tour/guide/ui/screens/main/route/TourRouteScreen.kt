@@ -13,7 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -38,6 +39,7 @@ import androidx.navigation3.runtime.NavKey
 import coil3.compose.AsyncImage
 import org.koin.compose.viewmodel.koinViewModel
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Preview(showBackground = true)
 @Composable
 fun TourAudioPlayerScreen(
@@ -158,9 +160,7 @@ fun TourAudioPlayerScreen(
                         .padding(0.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.fillMaxWidth(0.2f)
-                    )
+                    LoadingIndicator()
                 }
             }
 

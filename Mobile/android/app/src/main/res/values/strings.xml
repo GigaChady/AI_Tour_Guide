@@ -156,4 +156,12 @@
     <string name="summary_icon_section_time">Time</string>
     <string name="summary_icon_section_distance">Distance</string>
     <string name="summary_icon_section_attractions">Attractions</string>
+    <string name="main_notification_channel_name">Tour notifications</string>
+    <string name="main_notification_channel_desc">Notifications shown when a tour is active</string>
+
+    <string name="audio_player_preparing_tour_message">Preparing your tour...</string>
+    <string name="audio_player_default_place_name">Narration</string>
+    <string name="audio_player_desc">AI Tour Guide</string>
+    <string name="audio_player_loading_next_stop">Loading next stop…</string>
+    <string name="audio_player_loading_narration">Preparing narration…</string>
 </resources>
