@@ -49,7 +49,7 @@ class _VisibleTextParser(HTMLParser):
         return re.sub(r"\s+", " ", " ".join(self.parts)).strip()
 
 
-class DuckDuckGoWebSearchProvider:
+class DDGSWebSearchProvider:
     def __init__(self, timeout_seconds: int = 12):
         self.timeout_seconds = timeout_seconds
         self._catalog: dict[str, SearchResult] = {}
@@ -70,7 +70,7 @@ class DuckDuckGoWebSearchProvider:
         return set(self._read_source_ids)
 
     def search(self, query: str, max_results: int = 5) -> list[SearchResult]:
-        from duckduckgo_search import DDGS
+        from ddgs import DDGS
 
         clean_query = query.strip()
         if not clean_query:
@@ -78,7 +78,11 @@ class DuckDuckGoWebSearchProvider:
         max_results = max(1, min(int(max_results), 8))
         self._query_log.append(clean_query)
 
-        rows = list(DDGS(timeout=self.timeout_seconds).text(clean_query, max_results=max_results))
+        rows = list(
+            DDGS(timeout=self.timeout_seconds).text(
+                clean_query, max_results=max_results, backend="auto"
+            )
+        )
         results: list[SearchResult] = []
         for row in rows:
             url = str(row.get("href") or row.get("url") or "").strip()

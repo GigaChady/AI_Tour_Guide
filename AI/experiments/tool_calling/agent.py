@@ -58,11 +58,18 @@ class NvidiaToolCallingResearchAgent:
         total_usage: dict[str, Any] = {}
 
         for step in range(1, self.max_steps + 1):
-            response = self.nvidia_client.create(
-                messages,
-                tools=tools,
-                tool_choice="auto",
-            )
+            try:
+                response = self.nvidia_client.create(
+                    messages,
+                    tools=tools,
+                    tool_choice="auto",
+                )
+            except Exception as exc:
+                completed_tools = [entry.tool_name for entry in trace]
+                raise RuntimeError(
+                    f"NVIDIA request failed at agent step {step}/{self.max_steps}; "
+                    f"completed tools: {completed_tools}. {exc}"
+                ) from exc
             for key, value in response.usage.items():
                 if isinstance(value, (int, float)):
                     total_usage[key] = total_usage.get(key, 0) + value

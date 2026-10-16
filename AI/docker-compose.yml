@@ -1,51 +1,4 @@
 services:
-  ollama:
-    image: ollama/ollama:latest
-    container_name: ai-ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_models:/root/.ollama
-    environment:
-      - OLLAMA_KEEP_ALIVE=24h
-    healthcheck:
-      test: [ "CMD-SHELL", "ollama list || exit 1" ]
-      interval: 30s
-      timeout: 5s
-      retries: 5
-    command: serve
-    profiles: ["llm"]
-    networks:
-      - ai-network
-
-  ollama-init:
-    image: ollama/ollama:latest
-    container_name: ai-ollama-init
-    depends_on:
-      ollama:
-        condition: service_healthy
-    volumes:
-      - ollama_models:/root/.ollama
-    environment:
-      - OLLAMA_HOST=http://ollama:11434
-      - MODEL_NAME=${OLLAMA_MODEL:-mistral-nemo}
-    entrypoint: /bin/sh
-    command:
-      - -c
-      - |
-        echo "Checking Ollama model: $$MODEL_NAME"
-        ollama list
-        if ! ollama list | awk 'NR>1 {print $$1}' | grep -qx "$$MODEL_NAME"; then
-          echo "Pulling model: $$MODEL_NAME"
-          ollama pull $$MODEL_NAME
-        else
-          echo "Model already exists: $$MODEL_NAME"
-        fi
-    restart: "no"
-    profiles: [ "llm" ]
-    networks:
-      - ai-network
-
   minio:
     image: minio/minio:latest
     container_name: tourguide-minio
@@ -68,7 +21,6 @@ services:
     environment:
       - AI_MOCK=${AI_MOCK:-true}
       - AI_RUN_STREAM_WORKER=${AI_RUN_STREAM_WORKER:-true}
-      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
       - PYTHONUNBUFFERED=1
       - MINIO_ENDPOINT=minio:9000
@@ -98,8 +50,6 @@ services:
         - ai-network
 
 volumes:
-  ollama_models:
-    name: ollama_models
   minio_data:
 
 networks:

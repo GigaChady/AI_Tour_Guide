@@ -1,38 +1,194 @@
 {
   "places": [
     {
-      "place_id": "place_682076a757ba",
-      "canonical_name": "Bolesława Chrobrego",
+      "place_id": "place_bae69fa750c2",
+      "canonical_name": "Dworzec Wrocław Nadodrze",
       "aliases": [],
-      "lat": 51.1216,
-      "lon": 17.0352
+      "lat": 51.1254778,
+      "lon": 17.0325544
+    },
+    {
+      "place_id": "place_2a5a8ca7c4fd",
+      "canonical_name": "Kolorowe Podwórka (ul. Roosevelta 14-16)",
+      "aliases": [],
+      "lat": 51.1224535,
+      "lon": 17.0422345
     }
   ],
   "chunks": [
     {
-      "chunk_id": "chunk_5b41aa20292b",
-      "anchor_type": "PLACE",
-      "anchor_name": "Bolesława Chrobrego",
-      "canonical_name": "Bolesława Chrobrego",
-      "topic": "Location",
-      "content": "Bolesława Chrobrego is a street located in the Nadodrze neighbourhood of Wrocław, Polska.",
+      "chunk_id": "chunk_1ce6378f7db8",
+      "anchor_type": "AREA",
+      "anchor_name": "Nadodrze",
+      "canonical_name": "Nadodrze",
+      "topic": "district history and overview",
+      "content": "Nadodrze is a Wrocław osiedle (settlement/district) carved out of Ołbin in 1991, north of the Old Town. Its territory, historically called 'Przedmieście Odrzańskie' (German: Oder Vorstadt), was incorporated into the city in 1808 after the demolition of the city fortifications. Population ~22,259 (2024). It survived WWII with relatively little damage, becoming the 'temporary city centre' in the first post-war years: in mid-April 1945 the Polish administration around Bolesław Drobner, the first post-war president of Wrocław, set up its temporary seat at today's ul. Poniatowskiego 25/27. The district contains Kępa Mieszczańska island, the Wrocław Nadodrze railway station, tram depot no. 2 on ul. Słowiańska, and the Wrocław power plant. The Nadodrze Council sits at ul. Rydygiera 43; the 'Łokietka 5 – Infopunkt Nadodrze' supports local community and cultural initiatives.",
       "source_ids": [
+        "src_001"
+      ],
+      "aliases": [
+        "Oder Vorstadt",
+        "Przedmieście Odrzańskie"
+      ],
+      "lat": 51.1216,
+      "lon": 17.0352,
+      "area_name": "Nadodrze",
+      "confidence": 0.9
+    },
+    {
+      "chunk_id": "chunk_23cc99685876",
+      "anchor_type": "AREA",
+      "anchor_name": "Nadodrze",
+      "canonical_name": "Nadodrze",
+      "topic": "district history and overview",
+      "content": "Nadodrze is a Wrocław osiedle (settlement) carved out of Ołbin in 1991, north of the Old Town. Its territory, historically called 'Przedmieście Odrzańskie' (German: Oder Vorstadt), was incorporated into the city in 1808 after the demolition of the city fortifications. Population ~22,259 (2024). It survived WWII with relatively little damage, becoming the 'temporary city centre' in the first post-war years: in mid-April 1945 the Polish administration around Bolesław Drobner, the first post-war president of Wrocław, set up its temporary seat at today's ul. Poniatowskiego 25/27. The district contains Kępa Mieszczańska island, the Wrocław Nadodrze railway station, tram depot no. 2 on ul. Słowiańska, and the Wrocław power plant. The Nadodrze Council sits at ul. Rydygiera 43; the 'Łokietka 5 – Infopunkt Nadodrze' supports local community and cultural initiatives.",
+      "source_ids": [
+        "src_001"
+      ],
+      "aliases": [
+        "Oder Vorstadt",
+        "Przedmieście Odrzańskie"
+      ],
+      "lat": 51.1216,
+      "lon": 17.0352,
+      "area_name": "Nadodrze",
+      "confidence": 0.9
+    },
+    {
+      "chunk_id": "chunk_93dc89da00d4",
+      "anchor_type": "AREA",
+      "anchor_name": "Nadodrze",
+      "canonical_name": "Nadodrze",
+      "topic": "architecture, courtyards and revitalisation",
+      "content": "Nadodrze is known for monumental tenement houses (kamienice) from the turn of the 19th/20th centuries along main arteries such as ul. Bolesława Chrobrego and ul. Jedności Narodowej, hidden courtyards ('studnie') behind large wooden gates, and a thriving street-art scene. Once a working-class and craftsman district, it is considered one of the most valuable enclaves of 19th-century residential architecture in Wrocław. Revitalisation since 2010 has cost over 140 million PLN (about 40 million from EU funds), covering tenement renovations, courtyards, greenery, schools and premises let to galleries, studios and craft workshops — though gentrification tensions remain. Murals cluster around pl. Staszica and ul. Księcia Witolda; murals on ul. Rydygiera reference the industrial past. A further courtyard renewal (block bounded by Kilińskiego, Jedności Narodowej, Poniatowskiego and Prusa, ~10,000 m², formerly home to a pre-war sausage factory, the post-war 'Pionier' cinema, a tool factory and a hospital on Poniatowskiego) is planned to start in 2027. Visitors are advised to explore on foot in morning light and respect residents' privacy in the courtyards.",
+      "source_ids": [
+        "src_003",
+        "src_006",
         "src_014"
       ],
       "aliases": [],
       "lat": 51.1216,
       "lon": 17.0352,
       "area_name": "Nadodrze",
+      "confidence": 0.85
+    },
+    {
+      "chunk_id": "chunk_8bedd63c6371",
+      "anchor_type": "PLACE",
+      "anchor_name": "Dworzec Wrocław Nadodrze",
+      "canonical_name": "Dworzec Wrocław Nadodrze",
+      "topic": "railway station history and building",
+      "content": "Wrocław Nadodrze station, at pl. Staszica 50 / pl. Powstańców Wielkopolskich, opened 28 May 1868 as the second-to-last standard-gauge station built in Wrocław, designed by Hermann Grapow (often confused with Wilhelm Grapow). Built of unplastered red brick, about 190 m long, in historicist styles of 1860s Germany; three storeys with three projections, the central one four storeys with an arched portico; listed as a monument (reg. A/2500/344/Wm, 1977). Originally called Rechte-Oder-Ufer-Thorbahnhof, later Breslau Odertor; it was the first station of the Right-Bank Oder Railway, serving the line to Oleśnica and Fosowskie (line no. 143), expanded until 1912. In July 1945 it was the first central Wrocław station to resume service (trains to Kraków, Warsaw, Szczecin), and the city's first post-war tram line no. 1 connected it with Biskupin. Until 1950 a nearby narrow-gauge station (Wrocław Wąskotorowy) linked to Trzebnica. The building was transferred from PKP in 2009 to the Voivodeship Marshal's Office, then to Polregio; since 2022 the owner is DL Invest Group, which plans modernisation with office, dining and retail uses. The station building was closed in March 2020 and remained shut with interiors in poor condition; the station still serves ~1,700 passengers (2024) on the Dolnośląska Kolej Aglomeracyjna, and pl. Staszica in front hosts a secondary bus hub.",
+      "source_ids": [
+        "src_009",
+        "src_010",
+        "src_011"
+      ],
+      "aliases": [
+        "Breslau Odertor",
+        "Rechte-Oder-Ufer-Thorbahnhof",
+        "Wrocław Nadodrze railway station"
+      ],
+      "lat": 51.1254778,
+      "lon": 17.0325544,
+      "area_name": "Nadodrze",
       "confidence": 0.9
+    },
+    {
+      "chunk_id": "chunk_9168a96421d6",
+      "anchor_type": "PLACE",
+      "anchor_name": "Kolorowe Podwórka (ul. Roosevelta 14-16)",
+      "canonical_name": "Kolorowe Podwórka (ul. Roosevelta 14-16)",
+      "topic": "community art attraction",
+      "content": "The 'Kolorowe Podwórka' (Colourful Courtyards) on Nadodrze are courtyards inside the block bounded by ul. Roosevelta, Henryka Brodatego and Jedności Narodowej — a free open-air gallery of over 3,000 m² of wall paintings, ceramic reliefs and sculptures. Initiated in 2013 by painter Mariusz Mikołajek with Witold Liszkowski, Jan Mikołajek and the OKAP (Ośrodek Kulturalnej Animacji Podwórkowej) team, starting with portraits of residents; in 2014–2017 two thematic areas were created ('Podwórko – nasze atelier' and 'Podwórko – odkrywanie sztuki'). A courtyard Guest Book has been kept since 2016. The project is co-financed by the City of Wrocław and is considered one of the most remarkable public-art projects in the city; a second colourful courtyard at Roosevelta 5A features residents' portraits, a paradise garden and animals.",
+      "source_ids": [
+        "src_001",
+        "src_015"
+      ],
+      "aliases": [
+        "Colourful Courtyards",
+        "Kolorowe Podwórka Wrocław"
+      ],
+      "lat": 51.1224535,
+      "lon": 17.0422345,
+      "area_name": "Nadodrze",
+      "confidence": 0.85
+    },
+    {
+      "chunk_id": "chunk_97f491392fc1",
+      "anchor_type": "PLACE",
+      "anchor_name": "ulica Bolesława Chrobrego",
+      "canonical_name": "ulica Bolesława Chrobrego",
+      "topic": "street character and history",
+      "content": "Ulica Bolesława Chrobrego is one of Nadodrze's main arteries, lined with monumental turn-of-the-19th/20th-century tenement houses. Historic photos show that some pre-war kamienice on the street no longer exist — a primary school (SP nr 108) now stands on the site of demolished tenements. The street retains original pre-war urban fabric, as Nadodrze survived the war far better than the Old Town.",
+      "source_ids": [
+        "src_006"
+      ],
+      "aliases": [
+        "Chrobrego street"
+      ],
+      "lat": 51.1216,
+      "lon": 17.0352,
+      "area_name": "Nadodrze",
+      "confidence": 0.7
     }
   ],
   "sources": [
     {
+      "source_id": "src_001",
+      "title": "Nadodrze (Wrocław) – Wikipedia, wolna encyklopedia",
+      "url": "https://pl.wikipedia.org/wiki/Nadodrze_(Wrocław)",
+      "snippet": "Na Nadodrze w połowie kwietnia 1945 r. przybyli członkowie polskiej grupy administracyjnej skupionej wokół Bolesława Drobnera – pierwszego powojennego prezydenta Wrocławia.",
+      "query": "Nadodrze Wrocław dzielnica historia architektura"
+    },
+    {
+      "source_id": "src_003",
+      "title": "Nadodrze — przewodnik po najciekawszej dzielnicy Wrocławia",
+      "url": "https://is.wroc.pl/atrakcje/nadodrze-przewodnik-po-dzielnicy",
+      "snippet": "Aug 19, 2026 · Nadodrze to najbardziej niejednoznaczna dzielnica Wrocławia — odnowione kamienice obok zaniedbanych podwórek, pracownie artystów obok starych zakładów. Zobacz, co obejrzeć podczas spaceru, co dała rewitalizacja za ponad 140 mln zł i jak naprawdę się tu mieszka.",
+      "query": "Nadodrze Wrocław dzielnica historia architektura"
+    },
+    {
+      "source_id": "src_006",
+      "title": "Odkryj tajemnicze podwórka i ukryte zakamarki wrocławskiego Nadodrza",
+      "url": "https://twojwroclawonline.pl/przewodnik-po-stolicy-dolnego-slaska/odkryj-tajemnicze-podworka-i-ukryte-zakamarki-wroclawskiego-nadodrza/",
+      "snippet": "Historia ukryta w bramach: Dlaczego Nadodrze fascynuje? Gdy spacerujemy głównymi arteriami Nadodrza, takimi jak ulice Chrobrego czy Jedności Narodowej, widzimy przede wszystkim monumentalne kamienice z przełomu XIX i XX wieku.",
+      "query": "ulica Bolesława Chrobrego Wrocław Nadodrze historia kamienice"
+    },
+    {
       "source_id": "src_014",
-      "title": "Wikipedia, wolna encyklopedia",
-      "url": "https://pl.wikipedia.org/wiki/Wikipedia:Strona_główna",
-      "snippet": "Z nowych i ostatnio rozbudowanych artykułów w Wikipedii o utworach Jarosława Iwaszkiewicza: …że Brzezina była ostatnim …",
-      "query": "Bolesław Chrobrego street Wrocław history architecture"
+      "title": "Nadodrze na nowo: Rewitalizacja serca Wrocławia w 2027 roku",
+      "url": "https://wro.com.pl/2026/02/22/nadodrze-na-nowo-rewitalizacja-serca-wroclawia-w-2027-roku/",
+      "snippet": "Rewitalizacja obejmie podwórze otoczone ulicami Kilińskiego, Jedności Narodowej, Poniatowskiego i Prusa. Przygotowanie dokumentacji potrwa mniej niż rok, a rozpoczęcie prac budowlanych zaplanowano na 2027 rok. Nadodrze to miejsce o bogatej historii, które niegdyś było świadkiem rozwoju miasta.",
+      "query": "Nadodrze Wrocław rewitalizacja 140 mln zł kolorowe podwórka Roosevelta"
+    },
+    {
+      "source_id": "src_009",
+      "title": "Wrocław Nadodrze – Wikipedia, wolna encyklopedia",
+      "url": "https://pl.wikipedia.org/wiki/Wrocław_Nadodrze",
+      "snippet": "Wrocław Nadodrze – stacja kolejowa i przedostatni ze wszystkich wybudowanych we Wrocławiu normalnotorowych dworców, powstały w 1868 według projektu Hermanna Grapowa [1], który często mylony jest z Wilhelmem Grapowem [2], autorem zaprojektowanego kilkanaście lat wcześniej dworca Kolei Górnośląskiej, który w 1857 zastąpił stary ...",
+      "query": "Wrocław Nadodrze dworzec kolejowy historia budynek stacja"
+    },
+    {
+      "source_id": "src_010",
+      "title": "Wrocław Nadodrze railway station - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Wrocław_Nadodrze_railway_station",
+      "snippet": "The Wrocław Nadodrze station, built from unplastered red brick, spans 190 meters and reflects the historicist styles popular in 1860s Germany. The three-story structure features three projections, with the central one rising four stories and fronted by an arched portico.",
+      "query": "Wrocław Nadodrze dworzec kolejowy historia budynek stacja"
+    },
+    {
+      "source_id": "src_011",
+      "title": "Wrocław Nadodrze - Baza Kolejowa",
+      "url": "https://www.bazakolejowa.pl/index.php?dzial=stacje&id=2391&okno=start",
+      "snippet": "Jul 21, 2026 · #1 36wmwroclaw (2026-07-05 19:46:37) Budynek dworca zamknięty od marca 2020. Początkowo był zamknięty \"do odwołania\" z powodu pandemii. Po pandemii jednak nie został otwarty, wnętrze w bardzo złym stanie.",
+      "query": "Wrocław Nadodrze dworzec kolejowy historia budynek stacja"
+    },
+    {
+      "source_id": "src_015",
+      "title": "Kolorowe Podwórka Wrocław | Kolorowe Podwórka w Mieście Spotkań",
+      "url": "https://kolorowepodworkawroclaw.pl/",
+      "snippet": "Kolorowe Podwórka na wrocławskim Nadodrzu (ul. Roosevelta) to ponad 3km kwadratowe murali i ceramik, jest to forma artystycznej instalacji i rewitalizacji podwórek zainicjowana w 2013 roku przez Mariusza Mikołajka.",
+      "query": "Nadodrze Wrocław rewitalizacja 140 mln zł kolorowe podwórka Roosevelta"
     }
   ],
   "research_areas": [
@@ -42,8 +198,8 @@
       "center_lat": 51.1216,
       "center_lon": 17.0352,
       "radius_m": 900,
-      "research_count": 1,
-      "chunk_count": 1
+      "research_count": 2,
+      "chunk_count": 6
     }
   ]
 }

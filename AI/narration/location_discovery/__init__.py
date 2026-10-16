@@ -1,3 +1,3 @@
-from narration.location_discovery.location_discovery_task import LocationDiscoveryTask
+from narration.location_discovery.location_context_task import LocationContextTask
 
-__all__ = ["LocationDiscoveryTask"]
+__all__ = ["LocationContextTask"]

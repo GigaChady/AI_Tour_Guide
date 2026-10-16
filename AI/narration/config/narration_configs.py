@@ -5,7 +5,7 @@ from narration.schemas import NarrationDetailLevel, NarrationLanguage
 
 
 class NarrationDefaultsConfig(BaseSettings):
-    """Global defaults used to translate worker events into pipeline settings."""
+    """Defaults retained for mapping Redis events to narration settings."""
 
     model_config = SettingsConfigDict(
         env_file=".env",

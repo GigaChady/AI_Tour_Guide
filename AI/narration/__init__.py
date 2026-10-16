@@ -1,4 +1,1 @@
-from narration.pipeline import TourNarrationPipeline
-from narration.schemas import NarrationPipelineRequest
-
-__all__ = ["NarrationPipelineRequest", "TourNarrationPipeline"]
+"""Reusable location research and knowledge modules for TourGuide."""

@@ -219,7 +219,14 @@ class InMemoryKnowledgeStore:
             )
         return result
 
-    def save_json(self, path: Path) -> None:
+    def save_json(
+        self,
+        path: Path,
+        *,
+        metadata: dict[str, Any] | None = None,
+        run: dict[str, Any] | None = None,
+        exclusive: bool = False,
+    ) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         payload = {
             "places": [value.to_dict() for value in self.places.values()],
@@ -227,4 +234,9 @@ class InMemoryKnowledgeStore:
             "sources": [value.to_dict() for value in self.sources.values()],
             "research_areas": [value.to_dict() for value in self.research_areas.values()],
         }
-        path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        if metadata is not None:
+            payload["metadata"] = metadata
+        if run is not None:
+            payload["run"] = run
+        with path.open("x" if exclusive else "w", encoding="utf-8") as output:
+            json.dump(payload, output, ensure_ascii=False, indent=2)

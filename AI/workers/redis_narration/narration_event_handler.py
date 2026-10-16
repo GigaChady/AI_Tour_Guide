@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import logging
 import os
+from typing import Protocol
 
-from narration.pipeline import TourNarrationPipeline
-from narration.schemas import NarrationPipelineRequest, PoiCandidate
+from narration.schemas import NarrationPipelineRequest, PoiCandidate, TourPipelineResult
 from photos.contracts import PhotoGenerator
 from workers.redis_narration.backend_message_mapper import BackendMessageMapper
 from workers.redis_narration.messages import (
@@ -16,10 +16,14 @@ from workers.redis_narration.messages import (
 logger = logging.getLogger(__name__)
 
 
+class NarrationPipeline(Protocol):
+    def run(self, request: NarrationPipelineRequest) -> TourPipelineResult: ...
+
+
 class NarrationEventHandler:
     def __init__(
         self,
-        pipeline: TourNarrationPipeline | None,
+        pipeline: NarrationPipeline | None,
         photo_processor: PhotoGenerator | None = None,
         message_mapper: BackendMessageMapper | None = None,
         mock_enabled: bool | None = None,

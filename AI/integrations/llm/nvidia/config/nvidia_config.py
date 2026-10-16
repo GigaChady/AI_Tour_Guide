@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -13,6 +15,7 @@ class NvidiaConfig(BaseSettings):
     temperature: float = Field(default=0.3, ge=0.0, le=1.0)
     top_p: float = Field(default=0.9, ge=0.0, le=1.0)
     max_tokens: int = Field(default=700, ge=1)
+    reasoning_effort: Literal["low", "high", "max"] | None = None
     request_timeout_seconds: int = Field(default=45, ge=1)
     max_retries: int = Field(default=2, ge=0)
     retry_backoff_seconds: float = Field(default=2.0, ge=0.0)

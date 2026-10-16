@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
+import requests
+from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import Mock, patch
 
@@ -58,7 +61,9 @@ class NvidiaClientTest(unittest.TestCase):
             "usage": {"total_tokens": 3},
         }
         post.return_value = response
-        client = NvidiaChatCompletionsClient("nvapi-test", max_retries=0)
+        client = NvidiaChatCompletionsClient(
+            "nvapi-test", reasoning_budget=16_384, max_retries=0
+        )
 
         result = client.create(
             [{"role": "user", "content": "test"}],
@@ -70,6 +75,50 @@ class NvidiaClientTest(unittest.TestCase):
         self.assertEqual(request["json"]["reasoning_budget"], 16_384)
         self.assertEqual(request["json"]["tool_choice"], "auto")
         self.assertEqual(result.message["content"], "ok")
+
+    @patch("experiments.tool_calling.nvidia_client.requests.post")
+    def test_omits_unsupported_reasoning_budget_by_default(self, post: Mock) -> None:
+        response = Mock()
+        response.ok = True
+        response.status_code = 200
+        response.json.return_value = {
+            "choices": [{"message": {"role": "assistant", "content": "ok"}}]
+        }
+        post.return_value = response
+        client = NvidiaChatCompletionsClient("nvapi-test", model="z-ai/glm-5.3-flash")
+
+        client.create([{"role": "user", "content": "test"}])
+
+        self.assertNotIn("reasoning_budget", post.call_args.kwargs["json"])
+
+    @patch("experiments.tool_calling.nvidia_client.requests.post")
+    def test_glm_sends_low_reasoning_effort(self, post: Mock) -> None:
+        response = Mock()
+        response.ok = True
+        response.status_code = 200
+        response.json.return_value = {
+            "choices": [{"message": {"role": "assistant", "content": "ok"}}]
+        }
+        post.return_value = response
+        client = NvidiaChatCompletionsClient(
+            "nvapi-test", model="z-ai/glm-5.3-flash", reasoning_effort="low"
+        )
+
+        client.create([{"role": "user", "content": "test"}])
+
+        payload = post.call_args.kwargs["json"]
+        self.assertEqual(payload["reasoning_effort"], "low")
+        self.assertNotIn("reasoning_budget", payload)
+
+    @patch("experiments.tool_calling.nvidia_client.requests.post")
+    def test_timeout_identifies_model(self, post: Mock) -> None:
+        post.side_effect = requests.ReadTimeout("read timed out")
+        client = NvidiaChatCompletionsClient(
+            "nvapi-test", model="z-ai/glm-5.3-flash", timeout_seconds=30
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "glm-5.3-flash.*30 seconds"):
+            client.create([{"role": "user", "content": "test"}])
 
 
 class AgentLoopTest(unittest.TestCase):
@@ -105,6 +154,28 @@ class AgentLoopTest(unittest.TestCase):
         self.assertEqual(run.usage["total_tokens"], 50)
         followup_messages = client.requests[-1]["messages"]
         self.assertTrue(any(message["role"] == "tool" for message in followup_messages))
+
+
+class KnowledgeStorePersistenceTest(unittest.TestCase):
+    def test_exclusive_run_json_keeps_metadata_and_prior_file(self) -> None:
+        store = InMemoryKnowledgeStore()
+        with TemporaryDirectory(dir=Path(__file__).resolve().parent) as directory:
+            output_path = Path(directory) / "run.json"
+            store.save_json(
+                output_path,
+                metadata={"model": "z-ai/glm-5.3-flash", "web_search": "tavily"},
+                run={"usage": {"total_tokens": 42}},
+                exclusive=True,
+            )
+            first_content = output_path.read_text(encoding="utf-8")
+
+            with self.assertRaises(FileExistsError):
+                store.save_json(output_path, exclusive=True)
+
+            self.assertEqual(output_path.read_text(encoding="utf-8"), first_content)
+            saved = json.loads(first_content)
+            self.assertEqual(saved["metadata"]["web_search"], "tavily")
+            self.assertEqual(saved["run"]["usage"]["total_tokens"], 42)
 
 
 if __name__ == "__main__":

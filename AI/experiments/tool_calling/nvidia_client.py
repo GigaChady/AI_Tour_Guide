@@ -24,7 +24,8 @@ class NvidiaChatCompletionsClient:
         model: str = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
         endpoint: str = "https://integrate.api.nvidia.com/v1/chat/completions",
         max_tokens: int = 65_536,
-        reasoning_budget: int = 16_384,
+        reasoning_budget: int | None = None,
+        reasoning_effort: str | None = None,
         temperature: float = 0.6,
         top_p: float = 0.95,
         timeout_seconds: int = 180,
@@ -34,13 +35,14 @@ class NvidiaChatCompletionsClient:
         clean_key = api_key.strip()
         if not clean_key or clean_key.startswith("WKLEJ_"):
             raise ValueError("Paste a valid NVIDIA API key")
-        if reasoning_budget >= max_tokens:
+        if reasoning_budget is not None and reasoning_budget >= max_tokens:
             raise ValueError("reasoning_budget must be smaller than max_tokens")
         self.api_key = clean_key
         self.model = model
         self.endpoint = endpoint
         self.max_tokens = max_tokens
         self.reasoning_budget = reasoning_budget
+        self.reasoning_effort = reasoning_effort
         self.temperature = temperature
         self.top_p = top_p
         self.timeout_seconds = timeout_seconds
@@ -63,11 +65,14 @@ class NvidiaChatCompletionsClient:
             "messages": messages,
             "model": self.model,
             "max_tokens": self.max_tokens,
-            "reasoning_budget": self.reasoning_budget,
             "stream": False,
             "temperature": self.temperature,
             "top_p": self.top_p,
         }
+        if self.reasoning_budget is not None:
+            payload["reasoning_budget"] = self.reasoning_budget
+        if self.reasoning_effort is not None:
+            payload["reasoning_effort"] = self.reasoning_effort
         if tools:
             payload["tools"] = tools
             payload["tool_choice"] = tool_choice
@@ -75,12 +80,18 @@ class NvidiaChatCompletionsClient:
         response = None
         retryable_statuses = {429, 500, 502, 503, 504}
         for attempt in range(self.max_retries + 1):
-            response = requests.post(
-                self.endpoint,
-                headers=headers,
-                json=payload,
-                timeout=self.timeout_seconds,
-            )
+            try:
+                response = requests.post(
+                    self.endpoint,
+                    headers=headers,
+                    json=payload,
+                    timeout=self.timeout_seconds,
+                )
+            except requests.Timeout as exc:
+                raise RuntimeError(
+                    f"NVIDIA API timeout: model {self.model} did not respond "
+                    f"within {self.timeout_seconds} seconds"
+                ) from exc
             if response.status_code not in retryable_statuses or attempt >= self.max_retries:
                 break
             retry_after = response.headers.get("Retry-After")
