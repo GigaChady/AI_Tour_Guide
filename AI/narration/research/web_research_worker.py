@@ -20,6 +20,7 @@ from narration.knowledge import (
     Scope,
     Source,
 )
+from narration.knowledge.tool_calling_place_locator import ToolCallingPlaceLocator
 from narration.knowledge.normalization import normalized_name
 from narration.research.config import WebResearchConfig
 from narration.research.config.web_research_prompt import build_system_prompt
@@ -49,6 +50,7 @@ class WebResearchRun:
     chunk_ids: list[str] = field(default_factory=list)
     place_ids: list[str] = field(default_factory=list)
     unresolved_places: list[str] = field(default_factory=list)
+    location_diagnostics: dict[str, list[str]] = field(default_factory=dict)
     errors: list[str] = field(default_factory=list)
     search_calls: int = 0
     extract_calls: int = 0
@@ -71,6 +73,7 @@ class _Finding(BaseModel):
     aliases: list[str] = Field(default_factory=list)
     street: str = ""
     city: str = ""
+    address: str = ""
 
 
 class _Findings(BaseModel):
@@ -207,6 +210,7 @@ class WebResearchWorker:
         model: ResearchLanguageModel,
         store: InMemoryKnowledgeStore,
         place_locator: PlaceLocationResolver,
+        tool_place_locator: ToolCallingPlaceLocator | None = None,
         config: WebResearchConfig | None = None,
     ):
         self.provider_name = provider_name
@@ -214,6 +218,7 @@ class WebResearchWorker:
         self.model = model
         self.store = store
         self.place_locator = place_locator
+        self.tool_place_locator = tool_place_locator
         self.config = config or WebResearchConfig()
 
     def run(
@@ -333,7 +338,13 @@ class WebResearchWorker:
 
             place_id = None
             if finding.scope == Scope.PLACE:
-                place_city = finding.city or location.city
+                place_city = finding.city
+                if not place_city:
+                    report.unresolved_places.append(finding.anchor_name)
+                    report.errors.append(
+                        f"No city identified in research text for {finding.anchor_name}"
+                    )
+                    continue
                 aliases = [
                     PlaceAlias(name=name, source_ids=source_ids)
                     for name in dict.fromkeys(finding.aliases)
@@ -341,22 +352,34 @@ class WebResearchWorker:
                 ]
                 candidate = PlaceCandidate(
                     name=finding.anchor_name, city=place_city,
-                    street=finding.street, aliases=aliases,
+                    street=finding.street, address=finding.address, aliases=aliases,
                     source_ids=source_ids,
                 )
                 lookup_notes: list[str] = []
+                geocoding_model_calls: list[int] = []
                 try:
-                    candidate = self.place_locator.resolve(
-                        candidate, source_url="", source_text=finding.content,
-                        research_location=location, diagnostics=lookup_notes,
-                    )
+                    if self.tool_place_locator is not None:
+                        candidate = self.tool_place_locator.resolve(
+                            candidate, source_url="", source_text=combined_text,
+                            research_location=location, description=finding.content,
+                            diagnostics=lookup_notes, model_calls=geocoding_model_calls,
+                        )
+                    else:
+                        candidate = self.place_locator.resolve(
+                            candidate, source_url="", source_text=combined_text,
+                            research_location=location, diagnostics=lookup_notes,
+                        )
+                    report.location_diagnostics[finding.anchor_name] = lookup_notes
                 except Exception as exc:
+                    report.location_diagnostics[finding.anchor_name] = lookup_notes
                     report.unresolved_places.append(finding.anchor_name)
                     report.errors.append(
                         f"Location lookup failed for {finding.anchor_name}: "
                         f"{type(exc).__name__}: {exc}"
                     )
                     continue
+                finally:
+                    report.llm_calls += len(geocoding_model_calls)
                 if candidate is None:
                     report.unresolved_places.append(finding.anchor_name)
                     details = f" ({'; '.join(lookup_notes)})" if lookup_notes else ""
@@ -410,6 +433,7 @@ class WebResearchWorker:
             and all(0 < len(alias) <= config.max_location_name_chars for alias in finding.aliases)
             and len(finding.street) <= config.max_location_name_chars
             and len(finding.city) <= config.max_location_name_chars
+            and len(finding.address) <= config.max_address_chars
         )
 
     @staticmethod
@@ -433,8 +457,10 @@ class TavilyResearchWorker(WebResearchWorker):
         config: WebResearchConfig | None = None,
         *,
         place_locator: PlaceLocationResolver,
+        tool_place_locator: ToolCallingPlaceLocator | None = None,
     ):
         super().__init__(
             provider_name="tavily", client=client, model=model, store=store,
-            place_locator=place_locator, config=config
+            place_locator=place_locator, tool_place_locator=tool_place_locator,
+            config=config
         )

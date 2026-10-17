@@ -168,9 +168,29 @@ def _finding(content, **updates):
     item = {
         "scope": "PLACE", "anchor_name": "Most Testowy", "topic": "history",
         "content": content, "aliases": ["Kaiserbrücke"], "street": "Ulica Testowa",
+        "city": "Wrocław",
     }
     item.update(updates)
     return json.dumps({"items": [item]}, ensure_ascii=False)
+
+
+def test_worker_passes_model_address_and_research_text_to_locator():
+    location = _location()
+    query = _query_plan(location)[0]
+    hit = WebSearchHit("Most Testowy Wrocław", "https://example.org/most",
+                       "Historia Mostu Testowego", query)
+    text = "Most Testowy przy ul. Roosevelta 14 we Wrocławiu powstał w XIX wieku."
+    locator = _Locator()
+    worker = TavilyResearchWorker(
+        _WebClient({query: [hit]}, {hit.url: WebDocument(hit.title, hit.url, text)}),
+        _Model(_finding(text, city="Wrocław", address="ul. Roosevelta 14, Wrocław")),
+        InMemoryKnowledgeStore(), place_locator=locator,
+    )
+    report = worker.run(location)
+    candidate, arguments = locator.calls[0]
+    assert candidate.address == "ul. Roosevelta 14, Wrocław"
+    assert arguments["source_text"] == text
+    assert len(report.chunk_ids) == 1
 
 
 def test_worker_ranks_all_search_results_and_reads_two_documents_after_first_chunk():
@@ -199,7 +219,7 @@ def test_worker_ranks_all_search_results_and_reads_two_documents_after_first_chu
     })
     model = _Model(json.dumps({"items": [
         {"scope": "PLACE", "anchor_name": "Dworzec Nadodrze", "topic": "history",
-         "content": local_quote},
+         "content": local_quote, "city": "Wrocław"},
         {"scope": "PLACE", "anchor_name": "Katedra Wawelska", "city": "Kraków",
          "topic": "history", "content": remote_quote},
     ]}, ensure_ascii=False))
@@ -438,7 +458,7 @@ def test_worker_geocodes_and_saves_place_with_its_chunk():
     assert store.chunks[0].place_id == store.places[0].place_id
 
 
-def test_model_can_identify_places_without_literal_anchor_or_nearby_city_in_quotes():
+def test_model_can_identify_distant_place_but_does_not_guess_missing_city_from_gps():
     first_quote = "Przeprawa powstała w latach trzydziestych i łączy dwa brzegi rzeki."
     second_quote = "Druga przeprawa została odbudowana po wojnie i służyła tramwajom."
     document = WebDocument(
@@ -479,10 +499,11 @@ def test_model_can_identify_places_without_literal_anchor_or_nearby_city_in_quot
         place_locator=PlaceLocationResolver(search),
     ).run(_location())
 
-    assert len(report.chunk_ids) == len(store.places) == 2
-    assert search.cities == ["Wrocław", "Opole"]
-    assert {chunk.city for chunk in store.chunks} == {"Wrocław", "Opole"}
-    assert {chunk.anchor_name for chunk in store.chunks} == {"Most Testowy", "Most Odległy"}
+    assert len(report.chunk_ids) == len(store.places) == 1
+    assert search.cities == ["Opole"]
+    assert {chunk.city for chunk in store.chunks} == {"Opole"}
+    assert {chunk.anchor_name for chunk in store.chunks} == {"Most Odległy"}
+    assert report.unresolved_places == ["Most Testowy"]
     assert not any("unsupported place" in error for error in report.errors)
 
 

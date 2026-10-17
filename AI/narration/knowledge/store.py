@@ -80,6 +80,7 @@ class InMemoryKnowledgeStore:
                     canonical_name=candidate.name,
                     city=candidate.city,
                     street=candidate.street,
+                    address=candidate.address,
                     aliases=self._distinct_aliases(candidate.aliases, candidate.name),
                     external_ids=dict(candidate.external_ids),
                     locations=self._candidate_locations(candidate),
@@ -195,3 +196,5 @@ class InMemoryKnowledgeStore:
             place.coordinate_source = candidate.coordinate_source
         if not place.street and candidate.street:
             place.street = candidate.street
+        if not place.address and candidate.address:
+            place.address = candidate.address

@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import re
 from enum import Enum
+from typing import Literal
 from urllib.parse import urlsplit, urlunsplit
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -123,6 +124,8 @@ class GeocodedPlace(_KnowledgeModel):
     city: str = ""
     country: str = ""
     street: str = ""
+    house_number: str = ""
+    location_type: Literal["place", "address"] = "place"
     district: str = ""
     aliases: list[str] = Field(default_factory=list)
     external_ids: dict[str, str] = Field(default_factory=dict)
@@ -132,6 +135,7 @@ class PlaceCandidate(_OptionalCoordinates):
     name: str = Field(min_length=1)
     city: str = Field(min_length=1)
     street: str = ""
+    address: str = ""
     aliases: list[PlaceAlias] = Field(default_factory=list)
     external_ids: dict[str, str] = Field(default_factory=dict)
     locations: list[GeocodedPlace] = Field(default_factory=list)
@@ -143,6 +147,7 @@ class Place(_OptionalCoordinates):
     canonical_name: str = Field(min_length=1)
     city: str = Field(min_length=1)
     street: str = ""
+    address: str = ""
     aliases: list[PlaceAlias] = Field(default_factory=list)
     external_ids: dict[str, str] = Field(default_factory=dict)
     locations: list[GeocodedPlace] = Field(default_factory=list)

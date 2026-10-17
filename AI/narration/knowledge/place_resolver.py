@@ -64,8 +64,14 @@ class PlaceResolver:
                 candidate.external_ids[key].casefold() != place.external_ids[key].casefold()
                 for key in shared_id_types
             )
-            candidate_location_ids = {point.coordinate_source for point in candidate.locations}
-            place_location_ids = {point.coordinate_source for point in place.locations}
+            candidate_location_ids = {
+                point.coordinate_source for point in candidate.locations
+                if point.location_type == "place"
+            }
+            place_location_ids = {
+                point.coordinate_source for point in place.locations
+                if point.location_type == "place"
+            }
             shared_location = bool(candidate_location_ids & place_location_ids)
             id_matches = (bool(shared_id_types) or shared_location) and not ids_conflict
             city_matches = normalized_name(candidate.city) == normalized_name(place.city)

@@ -19,6 +19,7 @@ class WebResearchConfig:
     max_topic_chars: int = 100
     max_aliases: int = 5
     max_location_name_chars: int = 150
+    max_address_chars: int = 200
     area_title_weight: int = 6
     area_snippet_weight: int = 3
     city_title_weight: int = 4
